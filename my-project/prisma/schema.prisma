@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- User & RBAC Section ---
+
+enum Role {
+  ADMIN
+  MERCHANT
+  VIP_CLIENT
+  USER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true) // ซ่อน User ที่ถูกแบนได้
+  
+  managedShops  Shop[]    @relation("ShopOwner")
+  orders        Order[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Shop {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean   @default(true)
+  
+  ownerId     String
+  owner       User      @relation("ShopOwner", fields: [ownerId], references: [id])
+  products    Product[]
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// --- Product & Tiered Pricing Section ---
+
+model Product {
+  id          String      @id @default(cuid())
+  sku         String      @unique
+  name        String
+  description String?     @db.Text
+  basePrice   Decimal     @db.Decimal(12, 2)
+  moq         Int         @default(1)
+  stock       Int         @default(0)
+  isActive    Boolean     @default(true) // Soft delete สินค้าได้
+  
+  shopId      String
+  shop        Shop        @relation(fields: [shopId], references: [id])
+  
+  priceTiers  PriceTier[]
+  
+  category    Category?   @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([shopId])
+  @@index([sku])
+  @@index([categoryId])
+}
+
+model PriceTier {
+  id          String   @id @default(cuid())
+  minQuantity Int
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  targetRole  Role     @default(VIP_CLIENT) 
+  isActive    Boolean  @default(true) // เปิด/ปิด โปรโมชั่นขั้นบันไดได้
+  
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// --- Category & Order Section ---
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  isActive    Boolean   @default(true)
+  products    Product[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id])
+  totalAmount Decimal     @db.Decimal(12, 2)
+  status      OrderStatus @default(PENDING)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
