@@ -28,14 +28,20 @@ export const dynamic = "force-dynamic";
 export default async function MerchantProductsPage() {
   // Fetch real data from PostgreSQL via Prisma
   // We order by createdAt descending so newest products show first
-  const products = await prisma.product.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      priceTiers: true,
-    },
-  });
+  let products: any[] = [];
+  try {
+    products = await prisma.product.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        priceTiers: true,
+      },
+    });
+  } catch (error) {
+    console.error("Database connection error:", error);
+    // Fallback to empty array if DB fails
+  }
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
