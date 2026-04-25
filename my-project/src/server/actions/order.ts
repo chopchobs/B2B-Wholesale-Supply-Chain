@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { CartItem } from "@/store/useCartStore";
+import { createClient } from "@/lib/supabase/server";
 
 export async function createOrder(cartItems: CartItem[]) {
   try {
@@ -10,28 +11,22 @@ export async function createOrder(cartItems: CartItem[]) {
       return { success: false, message: "Cart is empty." };
     }
 
-    // Dummy user and shop placeholders (since we don't have Auth yet)
-    // In a real application, you'd get this from your Auth context/session
-    // We will hardcode or dynamically ensure a User exists for now.
-    
-    // For simplicity, we'll try to find an admin/merchant user or create a dummy one
-    let dummyUser = await prisma.user.findFirst();
-    if (!dummyUser) {
-      dummyUser = await prisma.user.create({
-        data: {
-          email: "dummy.buyer@example.com",
-          password: "hashedpassword123",
-          name: "Dummy Buyer",
-        },
-      });
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { success: false, message: "You must be logged in to place an order." };
     }
+
+    // We use the authenticated user's ID to link the order
+    const userId = user.id;
 
     const totalAmount = cartItems.reduce((acc, item) => acc + item.totalPrice, 0);
 
     // 1. Create the Order with nested OrderItems in a single Prisma transaction
     const newOrder = await prisma.order.create({
       data: {
-        userId: dummyUser.id,
+        userId: userId,
         totalAmount,
         status: "PENDING",
         items: {
