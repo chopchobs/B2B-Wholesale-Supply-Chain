@@ -103,32 +103,32 @@
   --brand-warmgray: #e8e0d5;
 
   /* App-wide semantic tokens (mapped to brand palette) */
-  --background: #f5f0e8;       /* Warm Cream — main background */
-  --foreground: #2d2825;       /* Primary text — dark brownish-gray */
+  --background: #f5f0e8; /* Warm Cream — main background */
+  --foreground: #2d2825; /* Primary text — dark brownish-gray */
 
-  --card: #ffffff;             /* Surface */
+  --card: #ffffff; /* Surface */
   --card-foreground: #2d2825;
   --popover: #ffffff;
   --popover-foreground: #2d2825;
 
-  --primary: #cc785c;          /* Terracotta — CTAs */
+  --primary: #cc785c; /* Terracotta — CTAs */
   --primary-foreground: #ffffff;
 
-  --secondary: #d4a574;        /* Sand — brand highlight */
+  --secondary: #d4a574; /* Sand — brand highlight */
   --secondary-foreground: #2d2825;
 
-  --muted: #f5f0e8;            /* Warm cream surface */
+  --muted: #f5f0e8; /* Warm cream surface */
   --muted-foreground: #736b66; /* Secondary text */
 
-  --accent: #d4a574;           /* Sand accent */
+  --accent: #d4a574; /* Sand accent */
   --accent-foreground: #2d2825;
 
   --destructive: #c0392b;
   --destructive-foreground: #ffffff;
 
-  --border: #e8e0d5;           /* Warm Gray */
+  --border: #e8e0d5; /* Warm Gray */
   --input: #e8e0d5;
-  --ring: #cc785c;             /* Focus ring = Terracotta */
+  --ring: #cc785c; /* Focus ring = Terracotta */
 
   --radius: 0.5rem;
 
