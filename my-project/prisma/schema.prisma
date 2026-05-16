@@ -31,6 +31,11 @@ model User {
   // Phase 14: Notifications
   notifications Notification[]
 
+  // Phase 15: User & Role Management
+  approvals        UserApproval[] @relation("UserApprovals")
+  reviewedApprovals UserApproval[] @relation("ApprovalReviewer")
+  auditLogs        AuditLog[]
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -431,6 +436,58 @@ enum NotificationType {
   SHIPMENT_UPDATE
   PURCHASE_ORDER_UPDATE
   SYSTEM
+}
+
+// --- User Approval & Audit Log Section (Phase 15) ---
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model UserApproval {
+  id          String         @id @default(cuid())
+
+  userId      String
+  user        User           @relation("UserApprovals", fields: [userId], references: [id], onDelete: Cascade)
+
+  status      ApprovalStatus @default(PENDING)
+
+  // ผู้ admin ที่กดอนุมัติ/ปฏิเสธ (อาจเป็น null ตอน PENDING)
+  reviewedBy  String?
+  reviewer    User?          @relation("ApprovalReviewer", fields: [reviewedBy], references: [id])
+  reviewedAt  DateTime?
+
+  note        String?        @db.Text
+
+  createdAt   DateTime       @default(now())
+
+  @@index([userId])
+  @@index([status])
+  @@index([reviewedBy])
+  @@index([createdAt])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  action      String   // เช่น USER_APPROVED, ROLE_CHANGED, USER_SUSPENDED
+  entity      String   // เช่น User, Order, Invoice
+  entityId    String   // id ของ entity ที่ถูกกระทำ
+  details     Json?    // metadata เพิ่มเติม เช่น from/to role
+  ipAddress   String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([entityId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Notification {

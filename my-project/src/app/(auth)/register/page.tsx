@@ -12,11 +12,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { signUp } from "@/server/actions/auth";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   email: z.string().email("Please enter a valid email address."),
+  accountType: z.enum(["USER", "MERCHANT"]),
   password: z.string().min(6, "Password must be at least 6 characters."),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -30,7 +38,13 @@ export default function RegisterPage() {
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: {
+      name: "",
+      email: "",
+      accountType: "USER",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const onSubmit = async (values: z.infer<typeof registerSchema>) => {
@@ -39,11 +53,14 @@ export default function RegisterPage() {
     formData.append("name", values.name);
     formData.append("email", values.email);
     formData.append("password", values.password);
+    formData.append("role", values.accountType);
 
     const result = await signUp(formData);
 
     if (result.error) {
       setServerError(result.error);
+    } else if (result.pendingApproval) {
+      router.push("/login?pending=true");
     } else {
       router.push("/login?registered=true");
     }
@@ -83,6 +100,34 @@ export default function RegisterPage() {
                     <FormControl>
                       <Input placeholder="name@example.com" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="accountType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Account Type</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select account type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="USER">
+                          Buyer (Instant access)
+                        </SelectItem>
+                        <SelectItem value="MERCHANT">
+                          Merchant (Requires admin approval)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
