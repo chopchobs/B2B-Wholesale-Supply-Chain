@@ -14,6 +14,8 @@ import { getInvoiceSummary } from "@/server/actions/invoices";
 import { getSupplierSummary } from "@/server/actions/suppliers";
 import { getCustomerSummary } from "@/server/actions/customers";
 import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/merchant/NotificationBell";
+import { checkOverdueInvoices } from "@/server/actions/notifications";
 import {
   Table,
   TableBody,
@@ -28,6 +30,9 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function MerchantDashboard() {
+  // Phase 14: เช็คใบแจ้งหนี้ค้างชำระและสร้าง notifications ที่ยังไม่มี
+  await checkOverdueInvoices();
+
   // 1. Fetch Total Orders
   const totalOrders = await prisma.order.count();
 
@@ -109,6 +114,7 @@ export default async function MerchantDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <NotificationBell />
           <Link href="/merchant/inventory">
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <Boxes className="mr-2 h-4 w-4 text-[#CC785C]" />

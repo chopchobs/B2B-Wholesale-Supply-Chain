@@ -7,6 +7,7 @@ import {
   InventoryTransactionType,
   Prisma,
 } from "@prisma/client";
+import { createNotification } from "@/server/actions/notifications";
 
 // --- Types ---
 
@@ -44,6 +45,56 @@ function resolveStatus(qty: number, threshold: number): InventoryStatus {
   if (qty <= 0) return "OUT";
   if (qty <= threshold) return "LOW";
   return "OK";
+}
+
+// ส่ง notification ไปยัง merchant ทุกคนเมื่อสต็อกต่ำ/หมด
+async function notifyMerchantsLowStock(
+  inventoryItemId: string,
+  productId: string,
+  quantity: number,
+  threshold: number
+): Promise<void> {
+  try {
+    if (quantity > threshold) return; // สต็อกยังโอเค ไม่ต้องเตือน
+
+    const [product, merchants] = await Promise.all([
+      prisma.product.findUnique({
+        where: { id: productId },
+        select: { name: true, sku: true },
+      }),
+      prisma.user.findMany({
+        where: { role: { in: ["MERCHANT", "ADMIN"] }, isActive: true },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!product || merchants.length === 0) return;
+
+    const isOut = quantity <= 0;
+    const type = isOut ? "OUT_OF_STOCK" : "LOW_STOCK";
+    const title = isOut
+      ? `Out of stock: ${product.name}`
+      : `Low stock alert: ${product.name}`;
+    const message = isOut
+      ? `${product.name} (SKU: ${product.sku}) is out of stock. Restock immediately.`
+      : `${product.name} (SKU: ${product.sku}) is below threshold (${quantity}/${threshold}).`;
+
+    await Promise.all(
+      merchants.map((m) =>
+        createNotification({
+          userId: m.id,
+          type,
+          title,
+          message,
+          link: `/merchant/inventory`,
+          metadata: { inventoryItemId, productId, quantity, threshold },
+        })
+      )
+    );
+  } catch (err: unknown) {
+    // ห้าม block flow หลัก ถ้าแจ้งเตือนล้มเหลว
+    console.error("notifyMerchantsLowStock failed:", err);
+  }
 }
 
 // --- Zod Schemas ---
@@ -203,6 +254,14 @@ export async function restockItem(
     revalidatePath("/merchant/inventory");
     revalidatePath("/merchant");
 
+    // เช็คสต็อกหลัง restock — บางกรณี restock น้อยอาจยังต่ำกว่า threshold
+    await notifyMerchantsLowStock(
+      result.id,
+      result.productId,
+      result.quantity,
+      result.lowStockThreshold
+    );
+
     return {
       data: { id: result.id, quantity: result.quantity },
       error: null,
@@ -265,6 +324,13 @@ export async function adjustInventory(
 
     revalidatePath("/merchant/inventory");
     revalidatePath("/merchant");
+
+    await notifyMerchantsLowStock(
+      result.id,
+      result.productId,
+      result.quantity,
+      result.lowStockThreshold
+    );
 
     return {
       data: { id: result.id, quantity: result.quantity },
