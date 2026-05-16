@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import type { Decimal } from "@prisma/client/runtime/library";
+import { Prisma } from "@prisma/client";
+type Decimal = Prisma.Decimal;
 import { Plus, Trash2, Loader2, Tags } from "lucide-react";
 
 import { Button } from "@/components/ui/button";

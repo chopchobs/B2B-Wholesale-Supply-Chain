@@ -7,8 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
+import { getInventorySummary } from "@/server/actions/inventory";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -39,7 +40,15 @@ export default async function MerchantDashboard() {
   });
   const totalRevenue = Number(revenueAgg._sum.totalAmount || 0);
 
-  // 4. Fetch 5 Recent Sales
+  // 4. Fetch Inventory Summary (Phase 9)
+  const inventorySummaryResult = await getInventorySummary();
+  const inventorySummary = inventorySummaryResult.data ?? {
+    totalSkus: 0,
+    lowStockCount: 0,
+    outOfStockCount: 0,
+  };
+
+  // 5. Fetch 5 Recent Sales
   const recentOrders = await prisma.order.findMany({
     take: 5,
     orderBy: { createdAt: "desc" },
@@ -61,15 +70,37 @@ export default async function MerchantDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
-        <p className="text-muted-foreground mt-2">
-          Monitor your B2B wholesale performance and recent activity.
-        </p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-2">
+            Monitor your B2B wholesale performance and recent activity.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/merchant/inventory">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <Boxes className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Manage Inventory
+            </Button>
+          </Link>
+          <Link href="/merchant/products">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <Package className="mr-2 h-4 w-4 text-[#D4A574]" />
+              Products
+            </Button>
+          </Link>
+          <Link href="/merchant/orders">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <ShoppingCart className="mr-2 h-4 w-4 text-[#736B66]" />
+              Orders
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -104,6 +135,34 @@ export default async function MerchantDashboard() {
             <p className="text-xs text-muted-foreground mt-1">Currently listed in catalog</p>
           </CardContent>
         </Card>
+
+        <Link href="/merchant/inventory" className="block">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Inventory</CardTitle>
+              {inventorySummary.lowStockCount + inventorySummary.outOfStockCount > 0 ? (
+                <AlertTriangle className="h-4 w-4 text-[#CC785C]" />
+              ) : (
+                <Boxes className="h-4 w-4 text-[#D4A574]" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-[#2D2825]">
+                {inventorySummary.totalSkus}
+                <span className="text-sm font-normal text-muted-foreground ml-1">SKUs</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {inventorySummary.lowStockCount + inventorySummary.outOfStockCount > 0 ? (
+                  <span className="text-[#CC785C] font-medium">
+                    {inventorySummary.lowStockCount + inventorySummary.outOfStockCount} need attention
+                  </span>
+                ) : (
+                  "All stock levels healthy"
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-7">
