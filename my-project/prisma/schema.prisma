@@ -103,9 +103,12 @@ model Order {
   user        User        @relation(fields: [userId], references: [id])
   totalAmount Decimal     @db.Decimal(12, 2)
   status      OrderStatus @default(PENDING)
-  
+
   items       OrderItem[]
-  
+
+  // Phase 11: Invoice 1:1
+  invoice     Invoice?
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -178,4 +181,69 @@ model InventoryTransaction {
   @@index([inventoryItemId])
   @@index([type])
   @@index([createdAt])
+}
+
+// --- Invoice & Billing Section (Phase 11) ---
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CREDIT
+  CASH
+}
+
+model Invoice {
+  id            String          @id @default(cuid())
+  // เลขที่ใบแจ้งหนี้รูปแบบ INV-YYYYMM-XXXX
+  invoiceNumber String          @unique
+
+  // ผูก 1:1 กับ Order
+  orderId       String          @unique
+  order         Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  status        InvoiceStatus   @default(DRAFT)
+  issuedAt      DateTime        @default(now())
+  // net 30 ตั้งค่าเริ่มต้นใน server action
+  dueDate       DateTime
+  paidAt        DateTime?
+
+  subtotal      Decimal         @db.Decimal(12, 2)
+  tax           Decimal         @db.Decimal(12, 2) @default(0)
+  total         Decimal         @db.Decimal(12, 2)
+
+  notes         String?         @db.Text
+
+  payments      PaymentRecord[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
+}
+
+model PaymentRecord {
+  id          String        @id @default(cuid())
+
+  invoiceId   String
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  amount      Decimal       @db.Decimal(12, 2)
+  method      PaymentMethod @default(BANK_TRANSFER)
+  reference   String?
+  paidAt      DateTime      @default(now())
+  note        String?
+
+  createdAt   DateTime      @default(now())
+
+  @@index([invoiceId])
+  @@index([paidAt])
 }

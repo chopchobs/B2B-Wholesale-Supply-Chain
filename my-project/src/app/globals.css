@@ -204,3 +204,19 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+/* Phase 11: Print styles for invoice */
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  nav, header, aside, .print\:hidden {
+    display: none !important;
+  }
+  #invoice-print-area {
+    box-shadow: none !important;
+  }
+  @page {
+    margin: 16mm;
+  }
+}

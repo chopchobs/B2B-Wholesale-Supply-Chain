@@ -7,9 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3 } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
+import { getInvoiceSummary } from "@/server/actions/invoices";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -46,6 +47,17 @@ export default async function MerchantDashboard() {
     totalSkus: 0,
     lowStockCount: 0,
     outOfStockCount: 0,
+  };
+
+  // 4b. Fetch Invoice Summary (Phase 11)
+  const invoiceSummaryResult = await getInvoiceSummary();
+  const invoiceSummary = invoiceSummaryResult.data ?? {
+    totalOutstanding: 0,
+    totalPaidThisMonth: 0,
+    overdueCount: 0,
+    draftCount: 0,
+    sentCount: 0,
+    paidCount: 0,
   };
 
   // 5. Fetch 5 Recent Sales
@@ -96,6 +108,12 @@ export default async function MerchantDashboard() {
               Orders
             </Button>
           </Link>
+          <Link href="/merchant/invoices">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <FileText className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Invoices
+            </Button>
+          </Link>
           <Link href="/merchant/reports">
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <BarChart3 className="mr-2 h-4 w-4 text-[#CC785C]" />
@@ -106,7 +124,7 @@ export default async function MerchantDashboard() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -141,6 +159,33 @@ export default async function MerchantDashboard() {
             <p className="text-xs text-muted-foreground mt-1">Currently listed in catalog</p>
           </CardContent>
         </Card>
+
+        <Link href="/merchant/invoices" className="block">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Invoices</CardTitle>
+              {invoiceSummary.overdueCount > 0 ? (
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              ) : (
+                <FileText className="h-4 w-4 text-[#CC785C]" />
+              )}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-[#CC785C]">
+                ฿{invoiceSummary.totalOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {invoiceSummary.overdueCount > 0 ? (
+                  <span className="text-destructive font-medium">
+                    {invoiceSummary.overdueCount} overdue · outstanding total
+                  </span>
+                ) : (
+                  "Outstanding balance"
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Link href="/merchant/inventory" className="block">
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">

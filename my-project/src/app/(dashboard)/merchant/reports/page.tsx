@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, BarChart3, Boxes, Package, ShoppingCart } from "lucide-react";
+import { ArrowLeft, BarChart3, Boxes, FileText, Package, ShoppingCart } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
@@ -162,6 +162,16 @@ export default async function MerchantReportsPage(
             >
               <ShoppingCart className="mr-2 h-4 w-4 text-[#736B66]" />
               Orders
+            </Button>
+          </Link>
+          <Link href="/merchant/invoices">
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-[#E8E0D5] text-[#2D2825] hover:bg-white"
+            >
+              <FileText className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Invoices
             </Button>
           </Link>
         </div>
