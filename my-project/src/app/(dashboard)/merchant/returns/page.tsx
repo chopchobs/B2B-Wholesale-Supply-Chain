@@ -49,7 +49,7 @@ export default async function ReturnsListPage(): Promise<React.ReactElement> {
     returnsRes.error ?? summaryRes.error ?? returnableRes.error;
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6 bg-[#F5F0E8] min-h-screen">
+    <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 lg:pt-6 bg-[#F5F0E8] min-h-screen w-full max-w-full overflow-x-hidden">
       <div className="flex items-center gap-2">
         <Link href="/merchant">
           <Button
@@ -64,16 +64,18 @@ export default async function ReturnsListPage(): Promise<React.ReactElement> {
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#2D2825] flex items-center gap-2">
-            <RotateCcw className="h-7 w-7 text-[#CC785C]" />
-            Returns &amp; Refunds
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2D2825] flex items-center gap-2 break-words">
+            <RotateCcw className="h-6 w-6 sm:h-7 sm:w-7 text-[#CC785C] shrink-0" />
+            <span>Returns &amp; Refunds</span>
           </h1>
-          <p className="text-[#736B66] mt-1">
+          <p className="text-sm sm:text-base text-[#736B66] mt-1">
             จัดการคำขอคืนสินค้า (RMA) และการคืนเงินทั้งหมด
           </p>
         </div>
-        <CreateReturnDialog returnableOrders={returnableOrders} />
+        <div className="shrink-0">
+          <CreateReturnDialog returnableOrders={returnableOrders} />
+        </div>
       </div>
 
       {loadError && (
@@ -83,7 +85,7 @@ export default async function ReturnsListPage(): Promise<React.ReactElement> {
       )}
 
       {/* Summary Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <Card className="bg-white border-[#E8E0D5]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[#736B66]">
@@ -152,13 +154,13 @@ export default async function ReturnsListPage(): Promise<React.ReactElement> {
             <Banknote className="h-4 w-4 text-[#CC785C]" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[#2D2825]">
+            <div className="text-2xl font-bold text-[#2D2825] truncate">
               ฿
               {summary.totalRefundAmount.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <p className="text-xs text-[#736B66] mt-1">
+            <p className="text-xs text-[#736B66] mt-1 truncate">
               คืนเงินรวม ({summary.refunded} รายการ)
             </p>
           </CardContent>

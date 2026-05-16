@@ -191,7 +191,7 @@ export function CreateReturnDialog({
           New Return
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl bg-white border-[#E8E0D5] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl bg-white border-[#E8E0D5] max-h-[90vh] overflow-y-auto w-[calc(100vw-2rem)] sm:w-full">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-[#2D2825]">
             <RotateCcw className="h-5 w-5 text-[#CC785C]" />
@@ -269,19 +269,19 @@ export function CreateReturnDialog({
                       className="rounded-md border border-[#E8E0D5] bg-white p-3 space-y-2"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2 flex-1">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
                           <Checkbox
                             checked={it.selected}
                             onCheckedChange={(v) =>
                               updateItem(it.orderItemId, "selected", v === true)
                             }
-                            className="mt-1"
+                            className="mt-1 shrink-0"
                           />
-                          <div className="flex-1">
-                            <div className="text-[#2D2825] font-medium text-sm">
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[#2D2825] font-medium text-sm break-words">
                               {it.productName}
                             </div>
-                            <div className="text-xs text-[#736B66] font-mono">
+                            <div className="text-xs text-[#736B66] font-mono break-all">
                               {it.productSku} · คืนได้ {it.returnable} · ฿
                               {it.unitPrice.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
@@ -309,7 +309,7 @@ export function CreateReturnDialog({
                               ),
                             )
                           }
-                          className="w-20 border-[#E8E0D5]"
+                          className="w-20 shrink-0 border-[#E8E0D5]"
                         />
                       </div>
                       {it.selected && (
@@ -357,7 +357,7 @@ export function CreateReturnDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[#2D2825]">Reason</Label>
               <Select

@@ -159,15 +159,15 @@ export function ReturnDetailClient({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-[#2D2825] flex items-center gap-2">
-            <RotateCcw className="h-7 w-7 text-[#CC785C]" />
-            {returnRequest.returnNumber}
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2D2825] flex items-center gap-2 break-all">
+            <RotateCcw className="h-6 w-6 sm:h-7 sm:w-7 text-[#CC785C] shrink-0" />
+            <span className="break-all">{returnRequest.returnNumber}</span>
           </h1>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
             <Badge variant={getStatusVariant(returnRequest.status)}>
               {returnRequest.status}
             </Badge>
@@ -207,7 +207,7 @@ export function ReturnDetailClient({
             <Button
               onClick={handleReceive}
               disabled={submitting}
-              className="bg-[#D4A574] text-white hover:bg-[#B88A5C]"
+              className="bg-[#CC785C] text-white hover:bg-[#B86548]"
             >
               {submitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -256,10 +256,10 @@ export function ReturnDetailClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-[#2D2825] font-medium">
+            <div className="text-[#2D2825] font-medium truncate">
               {returnRequest.customerName ?? "—"}
             </div>
-            <div className="text-xs text-[#736B66]">
+            <div className="text-xs text-[#736B66] truncate">
               {returnRequest.customerEmail}
             </div>
           </CardContent>
@@ -312,13 +312,13 @@ export function ReturnDetailClient({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-[#2D2825] font-bold text-xl">
+            <div className="text-[#2D2825] font-bold text-xl truncate">
               ฿
               {returnRequest.refundAmount.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
               })}
             </div>
-            <div className="text-xs text-[#736B66] mt-1">
+            <div className="text-xs text-[#736B66] mt-1 truncate">
               {returnRequest.refundMethod.replace(/_/g, " ")}
               {returnRequest.refundedAt &&
                 ` · ${new Date(returnRequest.refundedAt).toLocaleDateString()}`}
@@ -333,8 +333,8 @@ export function ReturnDetailClient({
           <CardTitle className="text-[#2D2825]">Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border border-[#E8E0D5] overflow-hidden">
-            <Table>
+          <div className="rounded-md border border-[#E8E0D5] overflow-x-auto">
+            <Table className="min-w-[800px]">
               <TableHeader>
                 <TableRow className="bg-[#F5F0E8] hover:bg-[#F5F0E8]">
                   <TableHead className="text-[#736B66]">Product</TableHead>

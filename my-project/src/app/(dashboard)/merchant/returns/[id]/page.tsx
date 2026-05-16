@@ -24,7 +24,7 @@ export default async function ReturnDetailPage({
   const returnRequest = res.data;
 
   return (
-    <div className="flex-1 space-y-6 p-8 pt-6 bg-[#F5F0E8] min-h-screen">
+    <div className="flex-1 space-y-6 p-4 sm:p-6 lg:p-8 lg:pt-6 bg-[#F5F0E8] min-h-screen w-full max-w-full overflow-x-hidden">
       <div className="flex items-center gap-2">
         <Link href="/merchant/returns">
           <Button

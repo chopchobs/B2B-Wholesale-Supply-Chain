@@ -96,9 +96,9 @@ export function ReturnTableClient({
 
   return (
     <Card className="bg-white border-[#E8E0D5]">
-      <CardContent className="p-4 space-y-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[240px]">
+      <CardContent className="p-3 sm:p-4 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[#736B66]" />
             <Input
               placeholder="ค้นหา RMA #, order ID, ลูกค้า..."
@@ -107,13 +107,13 @@ export function ReturnTableClient({
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-[#736B66]" />
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <Filter className="h-4 w-4 text-[#736B66] shrink-0" />
             <Select
               value={status}
               onValueChange={(v) => setStatus(v as ReturnStatus | "ALL")}
             >
-              <SelectTrigger className="w-[160px] border-[#E8E0D5]">
+              <SelectTrigger className="w-full sm:w-[160px] border-[#E8E0D5]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -128,7 +128,7 @@ export function ReturnTableClient({
               value={reason}
               onValueChange={(v) => setReason(v as ReturnReason | "ALL")}
             >
-              <SelectTrigger className="w-[170px] border-[#E8E0D5]">
+              <SelectTrigger className="w-full sm:w-[170px] border-[#E8E0D5]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -142,8 +142,8 @@ export function ReturnTableClient({
           </div>
         </div>
 
-        <div className="rounded-md border border-[#E8E0D5] overflow-hidden">
-          <Table>
+        <div className="rounded-md border border-[#E8E0D5] overflow-x-auto">
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="bg-[#F5F0E8] hover:bg-[#F5F0E8]">
                 <TableHead className="text-[#736B66]">RMA #</TableHead>
@@ -174,24 +174,24 @@ export function ReturnTableClient({
               ) : (
                 filtered.map((r) => (
                   <TableRow key={r.id} className="hover:bg-[#F5F0E8]/40">
-                    <TableCell className="font-mono text-xs text-[#2D2825]">
+                    <TableCell className="font-mono text-xs text-[#2D2825] whitespace-nowrap">
                       {r.returnNumber}
                     </TableCell>
-                    <TableCell className="text-[#2D2825]">
-                      <div className="font-medium">
+                    <TableCell className="text-[#2D2825] max-w-[200px]">
+                      <div className="font-medium truncate">
                         {r.customerName ?? "—"}
                       </div>
-                      <div className="text-xs text-[#736B66]">
+                      <div className="text-xs text-[#736B66] truncate">
                         {r.customerEmail}
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-xs text-[#736B66]">
+                    <TableCell className="font-mono text-xs text-[#736B66] whitespace-nowrap">
                       #{r.orderId.substring(0, 8)}
                     </TableCell>
-                    <TableCell className="text-[#736B66] text-xs">
+                    <TableCell className="text-[#736B66] text-xs whitespace-nowrap">
                       {r.reason.replace(/_/g, " ")}
                     </TableCell>
-                    <TableCell className="text-[#2D2825] text-sm">
+                    <TableCell className="text-[#2D2825] text-sm whitespace-nowrap">
                       {r.itemCount} ({r.totalQuantity} ชิ้น)
                     </TableCell>
                     <TableCell>
@@ -199,13 +199,13 @@ export function ReturnTableClient({
                         {r.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right text-[#2D2825]">
+                    <TableCell className="text-right text-[#2D2825] whitespace-nowrap">
                       ฿
                       {r.refundAmount.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                       })}
                     </TableCell>
-                    <TableCell className="text-xs text-[#736B66]">
+                    <TableCell className="text-xs text-[#736B66] whitespace-nowrap">
                       {new Date(r.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
