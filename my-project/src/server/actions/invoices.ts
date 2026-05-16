@@ -7,6 +7,7 @@ import {
   Prisma,
 } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { getSettingValue } from "@/server/actions/settings";
 
 // --- Types ---
 
@@ -241,12 +242,32 @@ export async function getInvoiceById(
   }
 }
 
-// อัตราภาษีเริ่มต้น (VAT 7%) — ปรับได้ผ่าน ENV
-function getTaxRate(): number {
-  const raw = process.env.INVOICE_TAX_RATE;
-  if (!raw) return 0.07;
+// อัตราภาษี — อ่านจาก DB settings (Phase 16) ค่าใน DB เก็บเป็น "7" = 7%
+// fallback กรณีตั้งค่ายังไม่ถูก seed: ใช้ ENV เดิม หรือ 0.07
+async function getTaxRate(): Promise<number> {
+  const enabledRaw = await getSettingValue("tax.enabled", "true");
+  if (enabledRaw === "false") return 0;
+
+  const fallbackEnv = process.env.INVOICE_TAX_RATE;
+  const fallback = (() => {
+    if (!fallbackEnv) return 0.07;
+    const n = Number(fallbackEnv);
+    return Number.isFinite(n) && n >= 0 ? n : 0.07;
+  })();
+
+  const raw = await getSettingValue("tax.rate", "");
+  if (!raw) return fallback;
   const n = Number(raw);
-  return Number.isFinite(n) && n >= 0 ? n : 0.07;
+  if (!Number.isFinite(n) || n < 0) return fallback;
+  // ค่าจาก DB เป็นเปอร์เซ็นต์ (เช่น 7) → แปลงเป็นทศนิยม
+  return n / 100;
+}
+
+// payment terms (Net X) — อ่านจาก DB
+async function getPaymentTermsDays(): Promise<number> {
+  const raw = await getSettingValue("invoice.payment_terms_days", "30");
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 30;
 }
 
 export async function createInvoice(
@@ -274,13 +295,14 @@ export async function createInvoice(
 
     // คำนวณ subtotal จากผลรวม line item เพื่อความถูกต้อง
     const subtotal = order.items.reduce((s, it) => s + dec(it.subTotal), 0);
-    const taxRate = getTaxRate();
+    const taxRate = await getTaxRate();
     const tax = Math.round(subtotal * taxRate * 100) / 100;
     const total = Math.round((subtotal + tax) * 100) / 100;
 
     const now = new Date();
     const invoiceNumber = await generateInvoiceNumber(now);
-    const dueDate = addDays(now, 30);
+    const termsDays = await getPaymentTermsDays();
+    const dueDate = addDays(now, termsDays);
 
     const created = await prisma.invoice.create({
       data: {
