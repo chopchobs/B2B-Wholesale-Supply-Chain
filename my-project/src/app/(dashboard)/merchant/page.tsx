@@ -7,12 +7,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList, Users } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList, Users, UsersRound } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
 import { getInvoiceSummary } from "@/server/actions/invoices";
 import { getSupplierSummary } from "@/server/actions/suppliers";
 import { getCustomerSummary } from "@/server/actions/customers";
+import { getUserSummary } from "@/server/actions/users";
 import { Badge } from "@/components/ui/badge";
 import { NotificationBell } from "@/components/merchant/NotificationBell";
 import { checkOverdueInvoices } from "@/server/actions/notifications";
@@ -84,6 +85,18 @@ export default async function MerchantDashboard() {
     totalCreditOutstanding: 0,
   };
 
+  // 4e. Fetch User Summary (Phase 15)
+  const userSummaryResult = await getUserSummary();
+  const userSummary = userSummaryResult.data ?? {
+    totalUsers: 0,
+    admins: 0,
+    merchants: 0,
+    vipClients: 0,
+    buyers: 0,
+    pendingApprovals: 0,
+    suspendedUsers: 0,
+  };
+
   // 5. Fetch 5 Recent Sales
   const recentOrders = await prisma.order.findMany({
     take: 5,
@@ -145,6 +158,17 @@ export default async function MerchantDashboard() {
               Customers
             </Button>
           </Link>
+          <Link href="/merchant/users">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8] relative">
+              <UsersRound className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Users
+              {userSummary.pendingApprovals > 0 && (
+                <span className="ml-2 inline-flex items-center justify-center rounded-full bg-[#CC785C] text-white px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+                  {userSummary.pendingApprovals}
+                </span>
+              )}
+            </Button>
+          </Link>
           <Link href="/merchant/suppliers">
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <Truck className="mr-2 h-4 w-4 text-[#CC785C]" />
@@ -165,6 +189,26 @@ export default async function MerchantDashboard() {
           </Link>
         </div>
       </div>
+
+      {userSummary.pendingApprovals > 0 && (
+        <Link href="/merchant/users/approvals" className="block">
+          <div className="rounded-md p-4 bg-[#CC785C]/10 border border-[#CC785C]/40 flex items-center justify-between hover:bg-[#CC785C]/15 transition-colors">
+            <div className="flex items-center gap-3 text-sm">
+              <AlertTriangle className="h-5 w-5 text-[#CC785C]" />
+              <span className="text-[#2D2825] font-medium">
+                มีคำขออนุมัติ user ใหม่{" "}
+                <span className="text-[#CC785C] font-bold">
+                  {userSummary.pendingApprovals}
+                </span>{" "}
+                รายการที่รอดำเนินการ
+              </span>
+            </div>
+            <span className="text-xs text-[#CC785C] font-semibold">
+              ดู approval queue →
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* Metrics Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
