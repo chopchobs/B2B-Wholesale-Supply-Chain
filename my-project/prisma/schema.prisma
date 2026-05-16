@@ -64,6 +64,9 @@ model Product {
   category    Category?   @relation(fields: [categoryId], references: [id])
   categoryId  String?
 
+  // Phase 9: เชื่อมกับ InventoryItem แบบ 1:1
+  inventory   InventoryItem?
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -126,4 +129,53 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+// --- Inventory Management Section (Phase 9) ---
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  // ผูก 1:1 กับ Product ผ่าน productId
+  productId     String   @unique
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // ปริมาณคงเหลือปัจจุบัน
+  quantity      Int      @default(0)
+  // เกณฑ์เตือนสต็อกต่ำ
+  lowStockThreshold Int  @default(10)
+  // คลัง / ตำแหน่งจัดเก็บ
+  location      String   @default("MAIN-WH")
+
+  transactions  InventoryTransaction[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([productId])
+  @@index([location])
+}
+
+enum InventoryTransactionType {
+  RESTOCK
+  SALE
+  ADJUSTMENT
+  RETURN
+}
+
+model InventoryTransaction {
+  id          String   @id @default(cuid())
+
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  type        InventoryTransactionType
+  // quantityDelta: บวก = เพิ่ม, ลบ = ลด (ADJUSTMENT/SALE ใช้ค่าลบได้)
+  quantityDelta Int
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([inventoryItemId])
+  @@index([type])
+  @@index([createdAt])
 }

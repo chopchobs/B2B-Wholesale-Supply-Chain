@@ -59,7 +59,7 @@ export function AddProductForm() {
       const response = await createProduct(values);
 
       if (!response.success) {
-        setServerError(response.message);
+        setServerError(response.message ?? "Something went wrong.");
         return;
       }
 
