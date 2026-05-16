@@ -181,6 +181,12 @@ export default async function MerchantDashboard() {
               Purchase Orders
             </Button>
           </Link>
+          <Link href="/merchant/shipping">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <Truck className="mr-2 h-4 w-4 text-[#D4A574]" />
+              Shipping
+            </Button>
+          </Link>
           <Link href="/merchant/reports">
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <BarChart3 className="mr-2 h-4 w-4 text-[#CC785C]" />

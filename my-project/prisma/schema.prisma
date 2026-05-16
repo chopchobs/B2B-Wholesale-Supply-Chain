@@ -7,6 +7,7 @@ datasource db {
 }
 
 // --- User & RBAC Section ---
+// NOTE: forward-declared so Order/User can reference Phase 17 outbound shipments.
 
 enum Role {
   ADMIN
@@ -35,6 +36,9 @@ model User {
   approvals        UserApproval[] @relation("UserApprovals")
   reviewedApprovals UserApproval[] @relation("ApprovalReviewer")
   auditLogs        AuditLog[]
+
+  // Phase 17: Outbound shipments ที่ผู้ใช้นี้สร้าง / จัดส่ง
+  createdShipments Shipment[]     @relation("ShipmentCreator")
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -123,6 +127,9 @@ model Order {
   // Phase 11: Invoice 1:1
   invoice     Invoice?
 
+  // Phase 17: Shipments (1 order can have multiple split shipments)
+  shipments   Shipment[]
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -131,13 +138,16 @@ model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
+
   productId String
   product   Product  @relation(fields: [productId], references: [id])
-  
+
   quantity  Int
   unitPrice Decimal  @db.Decimal(12, 2)
   subTotal  Decimal  @db.Decimal(12, 2)
+
+  // Phase 17: line items ใน outbound shipment (split shipment)
+  shipmentItems ShipmentItem[]
 }
 
 enum OrderStatus {
@@ -569,3 +579,226 @@ model Warehouse {
   @@index([isActive])
   @@index([code])
 }
+
+// --- Shipping & Logistics Section (Phase 17) ---
+// Outbound: Order → Customer (แยกจาก InboundShipment ใน Phase 12: Supplier → Warehouse)
+
+enum CarrierStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ShipmentStatus {
+  PENDING        // สร้าง shipment แล้ว ยังไม่ได้ pick
+  READY_TO_SHIP  // pack เสร็จ รอ pickup
+  IN_TRANSIT     // carrier รับของแล้ว
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED         // ส่งไม่สำเร็จ
+  RETURNED
+  CANCELLED
+}
+
+enum ShipmentEventType {
+  CREATED
+  PICKED_UP
+  IN_TRANSIT
+  ARRIVED_AT_HUB
+  OUT_FOR_DELIVERY
+  DELIVERY_ATTEMPTED
+  DELIVERED
+  FAILED
+  RETURNED
+  CANCELLED
+  NOTE
+}
+
+enum ShippingDocumentType {
+  PACKING_SLIP
+  SHIPPING_LABEL
+  COMMERCIAL_INVOICE
+  CUSTOMS_FORM
+  OTHER
+}
+
+model Carrier {
+  id            String         @id @default(cuid())
+  // ชื่อผู้ให้บริการขนส่ง เช่น Kerry, Flash, ThaiPost
+  name          String
+  // code ใช้ในระบบ / generate tracking pattern (unique)
+  code          String         @unique
+  // URL template สำหรับติดตาม เช่น https://x.co/track?n={TRACKING}
+  trackingUrl   String?        @db.Text
+  contactName   String?
+  contactPhone  String?
+  contactEmail  String?
+  status        CarrierStatus  @default(ACTIVE)
+  notes         String?        @db.Text
+
+  rates         ShippingRate[]
+  shipments     Shipment[]
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+  @@index([code])
+}
+
+model ShippingZone {
+  id          String         @id @default(cuid())
+  // เช่น "Bangkok Metro", "Central Thailand", "International"
+  name        String         @unique
+  // รายชื่อจังหวัด/รหัสไปรษณีย์/ประเทศ — เก็บเป็น JSON เพื่อความยืดหยุ่น
+  regions     Json?
+  description String?        @db.Text
+  isActive    Boolean        @default(true)
+
+  rates       ShippingRate[]
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([isActive])
+}
+
+model ShippingRate {
+  id           String       @id @default(cuid())
+
+  carrierId    String
+  carrier      Carrier      @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  zoneId       String
+  zone         ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  // service เช่น Standard, Express, Same-Day
+  serviceName  String
+  // ราคาตั้งต้น
+  baseRate     Decimal      @db.Decimal(12, 2)
+  // ราคา/กก. (ถ้า weight-based)
+  perKgRate    Decimal      @db.Decimal(12, 2) @default(0)
+  // น้ำหนักขั้นต่ำที่ baseRate ครอบคลุม (กก.)
+  minWeightKg  Decimal      @db.Decimal(8, 3) @default(0)
+  // ระยะเวลาส่งโดยประมาณ (วัน)
+  estimatedDays Int?
+  isActive     Boolean      @default(true)
+
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([carrierId])
+  @@index([zoneId])
+  @@index([isActive])
+  // ไม่ให้ซ้ำ service เดียวกันใน carrier+zone
+  @@unique([carrierId, zoneId, serviceName])
+}
+
+model Shipment {
+  id              String           @id @default(cuid())
+  // เลขที่ shipment รูปแบบ SHP-YYYYMM-XXXX
+  shipmentNumber  String           @unique
+
+  orderId         String
+  order           Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  carrierId       String?
+  carrier         Carrier?         @relation(fields: [carrierId], references: [id])
+
+  // tracking จาก carrier (อาจยังไม่มีตอนสร้าง draft)
+  trackingNumber  String?
+  status          ShipmentStatus   @default(PENDING)
+
+  // ค่าบริการขนส่งที่ลูกค้า/ร้านจ่าย (snapshot)
+  shippingCost    Decimal          @db.Decimal(12, 2) @default(0)
+  weightKg        Decimal          @db.Decimal(8, 3) @default(0)
+
+  // ที่อยู่จัดส่ง (snapshot ตอนสร้าง — ไม่อ้างอิง CustomerProfile โดยตรง)
+  shipToName      String
+  shipToPhone     String?
+  shipToAddress   String           @db.Text
+  shipToCity      String?
+  shipToPostal    String?
+  shipToCountry   String?
+
+  // ผู้สร้าง shipment (merchant/admin)
+  createdById     String?
+  createdBy       User?            @relation("ShipmentCreator", fields: [createdById], references: [id])
+
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  estimatedDelivery DateTime?
+
+  notes           String?          @db.Text
+
+  items           ShipmentItem[]
+  events          ShipmentEvent[]
+  documents       ShippingDocument[]
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([orderId])
+  @@index([carrierId])
+  @@index([status])
+  @@index([trackingNumber])
+  @@index([shipmentNumber])
+  @@index([createdAt])
+}
+
+model ShipmentItem {
+  id           String     @id @default(cuid())
+
+  shipmentId   String
+  shipment     Shipment   @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  // ผูกกับ OrderItem เพื่อรู้ว่า ship อะไรไปแล้วบ้าง
+  orderItemId  String
+  orderItem    OrderItem  @relation(fields: [orderItemId], references: [id])
+
+  // จำนวนที่ส่งใน shipment นี้ (อาจ < orderItem.quantity ถ้า split)
+  quantity     Int
+
+  @@index([shipmentId])
+  @@index([orderItemId])
+}
+
+model ShipmentEvent {
+  id           String             @id @default(cuid())
+
+  shipmentId   String
+  shipment     Shipment           @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  type         ShipmentEventType
+  // ข้อความเหตุการณ์ เช่น "Picked up at Bangkok hub"
+  message      String             @db.Text
+  // สถานที่ที่เกิดเหตุการณ์
+  location     String?
+  // เวลาที่เหตุการณ์เกิด (อาจไม่เท่ากับ createdAt ถ้า import จาก carrier)
+  occurredAt   DateTime           @default(now())
+
+  createdAt    DateTime           @default(now())
+
+  @@index([shipmentId])
+  @@index([type])
+  @@index([occurredAt])
+}
+
+model ShippingDocument {
+  id           String                @id @default(cuid())
+
+  shipmentId   String
+  shipment     Shipment              @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  type         ShippingDocumentType
+  // URL/path ของไฟล์ที่ generate ออกมา (PDF/PNG) — อาจ null ถ้า render runtime
+  fileUrl      String?               @db.Text
+  // หมายเลขอ้างอิงเอกสาร เช่น PS-202605-0001
+  documentNumber String?
+  notes        String?               @db.Text
+
+  createdAt    DateTime              @default(now())
+
+  @@index([shipmentId])
+  @@index([type])
+}
+
