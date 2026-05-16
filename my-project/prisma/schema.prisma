@@ -512,3 +512,60 @@ model Notification {
   @@index([type])
   @@index([createdAt])
 }
+
+// --- Settings & Configuration Section (Phase 16) ---
+
+enum SettingType {
+  STRING
+  NUMBER
+  BOOLEAN
+  JSON
+}
+
+enum SettingCategory {
+  GENERAL
+  TAX
+  CURRENCY
+  WAREHOUSE
+  EMAIL
+  PRICING
+}
+
+model Setting {
+  id          String          @id @default(cuid())
+  // key เช่น tax.rate, store.name (unique เพื่อ upsert ได้)
+  key         String          @unique
+  // เก็บค่าเป็น String เสมอ แล้วใช้ type ระบุวิธี parse
+  value       String          @db.Text
+  type        SettingType     @default(STRING)
+  category    SettingCategory @default(GENERAL)
+  description String?         @db.Text
+
+  // ผู้แก้ไขล่าสุด (optional เผื่อ system update)
+  updatedBy   String?
+
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([category])
+  @@index([key])
+}
+
+model Warehouse {
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  address   String?  @db.Text
+  city      String?
+  country   String?
+  isDefault Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  notes     String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isDefault])
+  @@index([isActive])
+  @@index([code])
+}
