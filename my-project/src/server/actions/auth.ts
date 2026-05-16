@@ -41,7 +41,7 @@ export async function signUp(formData: FormData) {
           role: "USER", // Default role
         },
       });
-    } catch (dbError: any) {
+    } catch (dbError: unknown) {
       console.error("Failed to insert user to DB:", dbError);
       // Even if DB fails, we should handle it, but for B2B it's critical.
       // In production, you'd want compensation logic here.

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 // Zod schema for server-side validation
@@ -42,14 +43,15 @@ export async function createProduct(data: CreateProductData) {
     revalidatePath("/merchant/products");
 
     return { success: true, product: newProduct };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create product:", error);
-    
+
     // Check for Prisma unique constraint violation (e.g. SKU already exists)
-    if (error.code === "P2002") {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return { success: false, message: "A product with this SKU already exists." };
     }
-    
-    return { success: false, message: error.message || "An unexpected error occurred." };
+
+    const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    return { success: false, message };
   }
 }

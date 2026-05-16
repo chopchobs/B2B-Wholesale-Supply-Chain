@@ -12,14 +12,42 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* Custom Color Palette: Modern Minimalist */
-  --color-rosegold: #b76e79;
-  --color-rosegold-light: #d69ca5;
-  --color-rosegold-dark: #91515b;
-  --color-cream: #fffdd0;
-  --color-cream-light: #ffffee;
-  --color-cream-dark: #e6e4bb;
-  --color-white: #ffffff;
+  /* =====================================================
+     Brand Color Palette — Modern Minimalist with Elegant
+     Accents (ตาม CLAUDE.md)
+     ===================================================== */
+
+  /* Main Background — Warm Cream */
+  --color-cream: #f5f0e8;
+  --color-cream-50: #fbf8f3;
+  --color-cream-100: #f5f0e8;
+  --color-cream-200: #ece4d5;
+
+  /* Surface & Elements — White */
+  --color-surface: #ffffff;
+
+  /* Accent & Action — Terracotta */
+  --color-terracotta: #cc785c;
+  --color-terracotta-hover: #b86548;
+  --color-terracotta-50: #fbeee9;
+  --color-terracotta-100: #f3d5c9;
+  --color-terracotta-500: #cc785c;
+  --color-terracotta-600: #b86548;
+  --color-terracotta-700: #9a5238;
+
+  /* Highlight & Brand — Sand */
+  --color-sand: #d4a574;
+  --color-sand-50: #faf3e8;
+  --color-sand-100: #ecd5b3;
+  --color-sand-500: #d4a574;
+  --color-sand-600: #b88a5c;
+
+  /* Typography */
+  --color-ink: #2d2825;
+  --color-ink-muted: #736b66;
+
+  /* Borders & Dividers — Warm Gray */
+  --color-warmgray: #e8e0d5;
 
   /* shadcn/ui base variables */
   --color-border: var(--border);
@@ -64,86 +92,115 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
+  /* Brand tokens (raw values for reference / arbitrary use) */
+  --brand-cream: #f5f0e8;
+  --brand-surface: #ffffff;
+  --brand-terracotta: #cc785c;
+  --brand-terracotta-hover: #b86548;
+  --brand-sand: #d4a574;
+  --brand-ink: #2d2825;
+  --brand-ink-muted: #736b66;
+  --brand-warmgray: #e8e0d5;
+
+  /* App-wide semantic tokens (mapped to brand palette) */
+  --background: #f5f0e8;       /* Warm Cream — main background */
+  --foreground: #2d2825;       /* Primary text — dark brownish-gray */
+
+  --card: #ffffff;             /* Surface */
+  --card-foreground: #2d2825;
   --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #b76e79; /* Rose Gold */
+  --popover-foreground: #2d2825;
+
+  --primary: #cc785c;          /* Terracotta — CTAs */
   --primary-foreground: #ffffff;
-  --secondary: #fffdd0; /* Cream */
-  --secondary-foreground: #91515b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #fffdd0;
-  --accent-foreground: #171717;
-  --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #b76e79;
+
+  --secondary: #d4a574;        /* Sand — brand highlight */
+  --secondary-foreground: #2d2825;
+
+  --muted: #f5f0e8;            /* Warm cream surface */
+  --muted-foreground: #736b66; /* Secondary text */
+
+  --accent: #d4a574;           /* Sand accent */
+  --accent-foreground: #2d2825;
+
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
+
+  --border: #e8e0d5;           /* Warm Gray */
+  --input: #e8e0d5;
+  --ring: #cc785c;             /* Focus ring = Terracotta */
+
   --radius: 0.5rem;
-  
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+
+  --chart-1: #cc785c;
+  --chart-2: #d4a574;
+  --chart-3: #b86548;
+  --chart-4: #736b66;
+  --chart-5: #e8e0d5;
+
   --sidebar: #ffffff;
-  --sidebar-foreground: #171717;
-  --sidebar-primary: #b76e79;
+  --sidebar-foreground: #2d2825;
+  --sidebar-primary: #cc785c;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fffdd0;
-  --sidebar-accent-foreground: #171717;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #b76e79;
+  --sidebar-accent: #f5f0e8;
+  --sidebar-accent-foreground: #2d2825;
+  --sidebar-border: #e8e0d5;
+  --sidebar-ring: #cc785c;
 }
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --card: #0a0a0a;
-  --card-foreground: #ededed;
-  --popover: #0a0a0a;
-  --popover-foreground: #ededed;
-  --primary: #b76e79;
+  --background: #1f1a16;
+  --foreground: #f5f0e8;
+
+  --card: #2a221d;
+  --card-foreground: #f5f0e8;
+  --popover: #2a221d;
+  --popover-foreground: #f5f0e8;
+
+  --primary: #cc785c;
   --primary-foreground: #ffffff;
-  --secondary: #27272a;
-  --secondary-foreground: #fffdd0;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #ededed;
-  --destructive: #7f1d1d;
-  --destructive-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #b76e79;
-  
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: #0a0a0a;
-  --sidebar-foreground: #ededed;
-  --sidebar-primary: #b76e79;
+
+  --secondary: #d4a574;
+  --secondary-foreground: #1f1a16;
+
+  --muted: #2a221d;
+  --muted-foreground: #b8a89b;
+
+  --accent: #d4a574;
+  --accent-foreground: #1f1a16;
+
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
+
+  --border: #3a302a;
+  --input: #3a302a;
+  --ring: #cc785c;
+
+  --chart-1: #cc785c;
+  --chart-2: #d4a574;
+  --chart-3: #b86548;
+  --chart-4: #b8a89b;
+  --chart-5: #3a302a;
+
+  --sidebar: #2a221d;
+  --sidebar-foreground: #f5f0e8;
+  --sidebar-primary: #cc785c;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #27272a;
-  --sidebar-accent-foreground: #ededed;
-  --sidebar-border: #27272a;
-  --sidebar-ring: #b76e79;
+  --sidebar-accent: #3a302a;
+  --sidebar-accent-foreground: #f5f0e8;
+  --sidebar-border: #3a302a;
+  --sidebar-ring: #cc785c;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+    background-color: var(--background);
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
   }
 }

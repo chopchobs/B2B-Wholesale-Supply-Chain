@@ -18,8 +18,9 @@ export async function updateOrderStatus(orderId: string, newStatus: string) {
 
     revalidatePath("/merchant/orders");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to update order status:", error);
-    return { success: false, message: error.message || "Something went wrong." };
+    const message = error instanceof Error ? error.message : "Something went wrong.";
+    return { success: false, message };
   }
 }

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import type { Decimal } from "@prisma/client/runtime/library";
 import { Plus, Trash2, Loader2, Tags } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,10 +41,10 @@ interface ManagePricingTiersDialogProps {
   product: {
     id: string;
     name: string;
-    basePrice: number | any; // Prisma Decimal handled safely
+    basePrice: number | Decimal; // Prisma Decimal handled safely via Number()
   };
   // We can pass existing tiers if we fetch them, but for now we start fresh or empty if none provided
-  existingTiers?: { minQuantity: number; unitPrice: number | any }[];
+  existingTiers?: { minQuantity: number; unitPrice: number | Decimal }[];
 }
 
 export function ManagePricingTiersDialog({ product, existingTiers = [] }: ManagePricingTiersDialogProps) {
@@ -51,7 +52,7 @@ export function ManagePricingTiersDialog({ product, existingTiers = [] }: Manage
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema) as Resolver<z.infer<typeof formSchema>>,
     defaultValues: {
       tiers: existingTiers.length > 0 
         ? existingTiers.map(t => ({ minQuantity: t.minQuantity, unitPrice: Number(t.unitPrice) }))

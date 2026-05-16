@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, Loader2 } from "lucide-react";
@@ -43,7 +43,7 @@ export function AddProductForm() {
   const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema) as Resolver<z.infer<typeof formSchema>>,
     defaultValues: {
       sku: "",
       name: "",
@@ -85,7 +85,7 @@ export function AddProductForm() {
         <SheetHeader>
           <SheetTitle>Add New Product</SheetTitle>
           <SheetDescription>
-            Enter the details for the new product. Click save when you're done.
+            Enter the details for the new product. Click save when you&apos;re done.
           </SheetDescription>
         </SheetHeader>
 

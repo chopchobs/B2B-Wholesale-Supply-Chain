@@ -44,8 +44,9 @@ export async function createOrder(cartItems: CartItem[]) {
     revalidatePath("/products");
     
     return { success: true, orderId: newOrder.id };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create order:", error);
-    return { success: false, message: error.message || "An unexpected error occurred." };
+    const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    return { success: false, message };
   }
 }

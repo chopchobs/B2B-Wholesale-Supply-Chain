@@ -1,11 +1,33 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { OrderTableClient } from "@/components/merchant/OrderTableClient";
 
 export const dynamic = "force-dynamic";
 
+// Type inferred from the Prisma query shape with Decimal fields serialized to number
+type SerializedOrder = Omit<
+  Prisma.OrderGetPayload<{
+    include: {
+      user: { select: { name: true; email: true } };
+      items: { include: { product: { select: { name: true; sku: true } } } };
+    };
+  }>,
+  "totalAmount" | "items"
+> & {
+  totalAmount: number;
+  items: Array<
+    Omit<
+      Prisma.OrderItemGetPayload<{
+        include: { product: { select: { name: true; sku: true } } };
+      }>,
+      "unitPrice" | "subTotal"
+    > & { unitPrice: number; subTotal: number }
+  >;
+};
+
 export default async function OrdersPage() {
-  let orders: any[] = [];
+  let orders: SerializedOrder[] = [];
   let dbError = null;
 
   try {
@@ -33,10 +55,10 @@ export default async function OrdersPage() {
         subTotal: Number(item.subTotal)
       }))
     }));
-    
-  } catch (error: any) {
+
+  } catch (error: unknown) {
     console.error("Failed to fetch orders:", error);
-    dbError = error.message;
+    dbError = error instanceof Error ? error.message : "An unexpected error occurred.";
   }
 
   return (
