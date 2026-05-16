@@ -7,11 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList, Users } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
 import { getInvoiceSummary } from "@/server/actions/invoices";
 import { getSupplierSummary } from "@/server/actions/suppliers";
+import { getCustomerSummary } from "@/server/actions/customers";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -69,6 +70,15 @@ export default async function MerchantDashboard() {
     inTransitShipments: 0,
   };
 
+  // 4d. Fetch Customer Summary (Phase 13)
+  const customerSummaryResult = await getCustomerSummary();
+  const customerSummary = customerSummaryResult.data ?? {
+    totalCustomers: 0,
+    activeCustomers: 0,
+    suspendedCustomers: 0,
+    totalCreditOutstanding: 0,
+  };
+
   // 5. Fetch 5 Recent Sales
   const recentOrders = await prisma.order.findMany({
     take: 5,
@@ -123,6 +133,12 @@ export default async function MerchantDashboard() {
               Invoices
             </Button>
           </Link>
+          <Link href="/merchant/customers">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <Users className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Customers
+            </Button>
+          </Link>
           <Link href="/merchant/suppliers">
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <Truck className="mr-2 h-4 w-4 text-[#CC785C]" />
@@ -145,7 +161,7 @@ export default async function MerchantDashboard() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -202,6 +218,30 @@ export default async function MerchantDashboard() {
                   </span>
                 ) : (
                   "Outstanding balance"
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/merchant/customers" className="block">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Customers</CardTitle>
+              <Users className="h-4 w-4 text-[#CC785C]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-[#2D2825]">
+                {customerSummary.activeCustomers}
+                <span className="text-sm font-normal text-muted-foreground ml-1">active</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {customerSummary.totalCreditOutstanding > 0 ? (
+                  <span className="text-[#CC785C] font-medium">
+                    ฿{customerSummary.totalCreditOutstanding.toLocaleString(undefined, { minimumFractionDigits: 2 })} credit outstanding
+                  </span>
+                ) : (
+                  "No outstanding credit"
                 )}
               </p>
             </CardContent>
