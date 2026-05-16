@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3 } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
 import { Badge } from "@/components/ui/badge";
@@ -96,6 +96,12 @@ export default async function MerchantDashboard() {
               Orders
             </Button>
           </Link>
+          <Link href="/merchant/reports">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <BarChart3 className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Reports
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -168,9 +174,16 @@ export default async function MerchantDashboard() {
       <div className="grid gap-8 grid-cols-1 lg:grid-cols-7">
         {/* Chart Section */}
         <Card className="lg:col-span-4">
-          <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Estimated sales performance over the week.</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="space-y-1">
+              <CardTitle>Revenue Overview</CardTitle>
+              <CardDescription>Estimated sales performance over the week.</CardDescription>
+            </div>
+            <Link href="/merchant/reports">
+              <Button variant="outline" size="sm" className="text-xs border-[#E8E0D5] text-[#CC785C] hover:bg-[#F5F0E8]">
+                View Full Reports →
+              </Button>
+            </Link>
           </CardHeader>
           <CardContent className="pl-2">
             <OverviewChart />
