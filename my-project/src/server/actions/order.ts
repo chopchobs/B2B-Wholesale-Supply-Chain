@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { CartItem } from "@/store/useCartStore";
 import { createClient } from "@/lib/supabase/server";
+import { createNotification } from "@/server/actions/notifications";
 
 export async function createOrder(cartItems: CartItem[]) {
   try {
@@ -42,7 +43,29 @@ export async function createOrder(cartItems: CartItem[]) {
 
     // 2. Revalidate storefront routes if needed
     revalidatePath("/products");
-    
+
+    // 3. แจ้งเตือน merchant/admin ทุกคนว่ามี order ใหม่
+    try {
+      const merchants = await prisma.user.findMany({
+        where: { role: { in: ["MERCHANT", "ADMIN"] }, isActive: true },
+        select: { id: true },
+      });
+      await Promise.all(
+        merchants.map((m) =>
+          createNotification({
+            userId: m.id,
+            type: "NEW_ORDER",
+            title: `New order received`,
+            message: `A new order #${newOrder.id.substring(0, 8)} (฿${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}) has been placed.`,
+            link: `/merchant/orders`,
+            metadata: { orderId: newOrder.id, totalAmount },
+          })
+        )
+      );
+    } catch (notifyError: unknown) {
+      console.error("New order notification failed:", notifyError);
+    }
+
     return { success: true, orderId: newOrder.id };
   } catch (error: unknown) {
     console.error("Failed to create order:", error);
