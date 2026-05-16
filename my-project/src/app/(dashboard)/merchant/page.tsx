@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList, Users, UsersRound, Settings as SettingsIcon } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList, Users, UsersRound, Settings as SettingsIcon, RotateCcw } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
 import { getInvoiceSummary } from "@/server/actions/invoices";
@@ -185,6 +185,12 @@ export default async function MerchantDashboard() {
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <Truck className="mr-2 h-4 w-4 text-[#D4A574]" />
               Shipping
+            </Button>
+          </Link>
+          <Link href="/merchant/returns">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <RotateCcw className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Returns
             </Button>
           </Link>
           <Link href="/merchant/reports">
