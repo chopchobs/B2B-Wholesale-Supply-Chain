@@ -1,13 +1,18 @@
 import React from "react";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { ProductGrid } from "@/components/storefront/ProductGrid";
 import { CartProduct } from "@/store/useCartStore";
 
 export const dynamic = "force-dynamic";
 
+type ProductWithActiveTiers = Prisma.ProductGetPayload<{
+  include: { priceTiers: true };
+}>;
+
 export default async function StorefrontProductsPage() {
   // Fetch only active products
-  let dbProducts: any[] = [];
+  let dbProducts: ProductWithActiveTiers[] = [];
   try {
     dbProducts = await prisma.product.findMany({
       where: { isActive: true },
@@ -32,7 +37,7 @@ export default async function StorefrontProductsPage() {
     basePrice: Number(p.basePrice),
     moq: p.moq,
     stock: p.stock,
-    priceTiers: p.priceTiers ? p.priceTiers.map((t: any) => ({
+    priceTiers: p.priceTiers ? p.priceTiers.map((t) => ({
       id: t.id,
       minQuantity: t.minQuantity,
       unitPrice: Number(t.unitPrice),

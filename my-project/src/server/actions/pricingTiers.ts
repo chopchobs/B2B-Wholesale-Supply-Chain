@@ -46,8 +46,9 @@ export async function savePricingTiers(productId: string, tiers: { minQuantity: 
     revalidatePath("/merchant/products");
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to save pricing tiers:", error);
-    return { success: false, message: error.message || "An unexpected error occurred." };
+    const message = error instanceof Error ? error.message : "An unexpected error occurred.";
+    return { success: false, message };
   }
 }

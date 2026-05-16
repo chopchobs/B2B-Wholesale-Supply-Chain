@@ -1,6 +1,7 @@
 import React from "react";
 import { MoreHorizontal, Edit, Tags, Trash2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 import { AddProductForm } from "@/components/merchant/AddProductForm";
 import { ManagePricingTiersDialog } from "@/components/merchant/ManagePricingTiersDialog";
@@ -25,10 +26,12 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type ProductWithTiers = Prisma.ProductGetPayload<{ include: { priceTiers: true } }>;
+
 export default async function MerchantProductsPage() {
   // Fetch real data from PostgreSQL via Prisma
   // We order by createdAt descending so newest products show first
-  let products: any[] = [];
+  let products: ProductWithTiers[] = [];
   try {
     products = await prisma.product.findMany({
       orderBy: {
@@ -139,7 +142,7 @@ export default async function MerchantProductsPage() {
                 <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                   <div className="flex flex-col items-center justify-center space-y-1">
                     <span className="text-lg font-medium text-foreground">No products found</span>
-                    <span className="text-sm">Click "Add New Product" to get started.</span>
+                    <span className="text-sm">Click &quot;Add New Product&quot; to get started.</span>
                   </div>
                 </TableCell>
               </TableRow>

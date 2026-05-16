@@ -27,12 +27,33 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+interface SerializedOrderItem {
+  id: string;
+  orderId: string;
+  productId: string;
+  quantity: number;
+  unitPrice: number;
+  subTotal: number;
+  product: { name: string; sku: string };
+}
+
+interface SerializedOrder {
+  id: string;
+  userId: string;
+  totalAmount: number;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  user: { name: string | null; email: string };
+  items: SerializedOrderItem[];
+}
+
 interface OrderTableProps {
-  orders: any[]; // Expecting formatted orders from the server component
+  orders: SerializedOrder[];
 }
 
 export function OrderTableClient({ orders }: OrderTableProps) {
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<SerializedOrder | null>(null);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
@@ -60,7 +81,7 @@ export function OrderTableClient({ orders }: OrderTableProps) {
       <div className="text-center py-20 bg-muted/20 rounded-xl border border-dashed">
         <Package className="mx-auto h-12 w-12 text-muted-foreground/30 mb-4" />
         <h3 className="text-lg font-medium">No orders found</h3>
-        <p className="text-muted-foreground">You haven't received any B2B orders yet.</p>
+        <p className="text-muted-foreground">You haven&apos;t received any B2B orders yet.</p>
       </div>
     );
   }
@@ -98,7 +119,7 @@ export function OrderTableClient({ orders }: OrderTableProps) {
                 </TableCell>
                 <TableCell className="text-center">
                   <span className="inline-block px-2 py-1 bg-muted rounded-md text-xs font-mono">
-                    {order.items.reduce((acc: number, item: any) => acc + item.quantity, 0)}
+                    {order.items.reduce((acc: number, item: SerializedOrderItem) => acc + item.quantity, 0)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right font-bold text-primary">

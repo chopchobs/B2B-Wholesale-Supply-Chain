@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
