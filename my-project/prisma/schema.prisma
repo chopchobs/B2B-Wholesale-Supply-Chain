@@ -67,6 +67,9 @@ model Product {
   // Phase 9: เชื่อมกับ InventoryItem แบบ 1:1
   inventory   InventoryItem?
 
+  // Phase 12: line items ใน PurchaseOrder
+  purchaseOrderItems PurchaseOrderItem[]
+
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -246,4 +249,107 @@ model PaymentRecord {
 
   @@index([invoiceId])
   @@index([paidAt])
+}
+
+// --- Supplier Management Section (Phase 12) ---
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  CONFIRMED
+  RECEIVED
+  CANCELLED
+}
+
+enum InboundShipmentStatus {
+  IN_TRANSIT
+  DELIVERED
+  DELAYED
+}
+
+model Supplier {
+  id            String           @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?          @db.Text
+  contactPerson String?
+  website       String?
+  status        SupplierStatus   @default(ACTIVE)
+  notes         String?          @db.Text
+
+  purchaseOrders PurchaseOrder[]
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([status])
+  @@index([name])
+}
+
+model PurchaseOrder {
+  id              String              @id @default(cuid())
+  // เลขที่ใบสั่งซื้อรูปแบบ PO-YYYYMM-XXXX
+  poNumber        String              @unique
+
+  supplierId      String
+  supplier        Supplier            @relation(fields: [supplierId], references: [id])
+
+  status          PurchaseOrderStatus @default(DRAFT)
+  expectedDelivery DateTime?
+  notes           String?             @db.Text
+
+  subtotal        Decimal             @db.Decimal(12, 2) @default(0)
+  total           Decimal             @db.Decimal(12, 2) @default(0)
+
+  items           PurchaseOrderItem[]
+  shipments       InboundShipment[]
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([poNumber])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+
+  quantity        Int
+  unitCost        Decimal       @db.Decimal(12, 2)
+  total           Decimal       @db.Decimal(12, 2)
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+}
+
+model InboundShipment {
+  id              String                @id @default(cuid())
+
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder         @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  trackingNumber  String?
+  carrier         String?
+  shippedAt       DateTime?
+  receivedAt      DateTime?
+  status          InboundShipmentStatus @default(IN_TRANSIT)
+
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([status])
 }
