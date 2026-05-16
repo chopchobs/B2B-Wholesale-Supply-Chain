@@ -7,10 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
 import { getInvoiceSummary } from "@/server/actions/invoices";
+import { getSupplierSummary } from "@/server/actions/suppliers";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -58,6 +59,14 @@ export default async function MerchantDashboard() {
     draftCount: 0,
     sentCount: 0,
     paidCount: 0,
+  };
+
+  // 4c. Fetch Supplier Summary (Phase 12)
+  const supplierSummaryResult = await getSupplierSummary();
+  const supplierSummary = supplierSummaryResult.data ?? {
+    activeSuppliers: 0,
+    pendingPOs: 0,
+    inTransitShipments: 0,
   };
 
   // 5. Fetch 5 Recent Sales
@@ -114,6 +123,18 @@ export default async function MerchantDashboard() {
               Invoices
             </Button>
           </Link>
+          <Link href="/merchant/suppliers">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <Truck className="mr-2 h-4 w-4 text-[#CC785C]" />
+              Suppliers
+            </Button>
+          </Link>
+          <Link href="/merchant/purchase-orders">
+            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
+              <ClipboardList className="mr-2 h-4 w-4 text-[#D4A574]" />
+              Purchase Orders
+            </Button>
+          </Link>
           <Link href="/merchant/reports">
             <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
               <BarChart3 className="mr-2 h-4 w-4 text-[#CC785C]" />
@@ -124,7 +145,7 @@ export default async function MerchantDashboard() {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
@@ -181,6 +202,30 @@ export default async function MerchantDashboard() {
                   </span>
                 ) : (
                   "Outstanding balance"
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/merchant/suppliers" className="block">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Suppliers</CardTitle>
+              <Truck className="h-4 w-4 text-[#CC785C]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-[#2D2825]">
+                {supplierSummary.activeSuppliers}
+                <span className="text-sm font-normal text-muted-foreground ml-1">active</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {supplierSummary.pendingPOs > 0 ? (
+                  <span className="text-[#CC785C] font-medium">
+                    {supplierSummary.pendingPOs} pending POs
+                  </span>
+                ) : (
+                  "No pending purchase orders"
                 )}
               </p>
             </CardContent>
