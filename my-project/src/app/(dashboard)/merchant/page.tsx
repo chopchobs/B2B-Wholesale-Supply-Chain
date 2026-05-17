@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, BarChart3, FileText, Truck, ClipboardList, Users, UsersRound, Settings as SettingsIcon, RotateCcw } from "lucide-react";
+import { DollarSign, ShoppingCart, Package, Boxes, AlertTriangle, FileText, Truck, Users } from "lucide-react";
 import { OverviewChart } from "@/components/merchant/OverviewChart";
 import { getInventorySummary } from "@/server/actions/inventory";
 import { getInvoiceSummary } from "@/server/actions/invoices";
@@ -15,16 +15,7 @@ import { getSupplierSummary } from "@/server/actions/suppliers";
 import { getCustomerSummary } from "@/server/actions/customers";
 import { getUserSummary } from "@/server/actions/users";
 import { Badge } from "@/components/ui/badge";
-import { NotificationBell } from "@/components/merchant/NotificationBell";
 import { checkOverdueInvoices } from "@/server/actions/notifications";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -118,93 +109,13 @@ export default async function MerchantDashboard() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl space-y-8">
+    <div className="mx-auto w-full max-w-7xl px-4 py-8 space-y-8">
       <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard Overview</h1>
-          <p className="text-muted-foreground mt-2">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2D2825]">Dashboard Overview</h1>
+          <p className="text-[#736B66] mt-2 text-sm">
             Monitor your B2B wholesale performance and recent activity.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <NotificationBell />
-          <Link href="/merchant/inventory">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <Boxes className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Manage Inventory
-            </Button>
-          </Link>
-          <Link href="/merchant/products">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <Package className="mr-2 h-4 w-4 text-[#D4A574]" />
-              Products
-            </Button>
-          </Link>
-          <Link href="/merchant/orders">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <ShoppingCart className="mr-2 h-4 w-4 text-[#736B66]" />
-              Orders
-            </Button>
-          </Link>
-          <Link href="/merchant/invoices">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <FileText className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Invoices
-            </Button>
-          </Link>
-          <Link href="/merchant/customers">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <Users className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Customers
-            </Button>
-          </Link>
-          <Link href="/merchant/users">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8] relative">
-              <UsersRound className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Users
-              {userSummary.pendingApprovals > 0 && (
-                <span className="ml-2 inline-flex items-center justify-center rounded-full bg-[#CC785C] text-white px-1.5 py-0.5 text-[10px] font-semibold leading-none">
-                  {userSummary.pendingApprovals}
-                </span>
-              )}
-            </Button>
-          </Link>
-          <Link href="/merchant/suppliers">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <Truck className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Suppliers
-            </Button>
-          </Link>
-          <Link href="/merchant/purchase-orders">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <ClipboardList className="mr-2 h-4 w-4 text-[#D4A574]" />
-              Purchase Orders
-            </Button>
-          </Link>
-          <Link href="/merchant/shipping">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <Truck className="mr-2 h-4 w-4 text-[#D4A574]" />
-              Shipping
-            </Button>
-          </Link>
-          <Link href="/merchant/returns">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <RotateCcw className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Returns
-            </Button>
-          </Link>
-          <Link href="/merchant/reports">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <BarChart3 className="mr-2 h-4 w-4 text-[#CC785C]" />
-              Reports
-            </Button>
-          </Link>
-          <Link href="/merchant/settings">
-            <Button variant="outline" size="sm" className="border-[#E8E0D5] text-[#2D2825] hover:bg-[#F5F0E8]">
-              <SettingsIcon className="mr-2 h-4 w-4 text-[#736B66]" />
-              Settings
-            </Button>
-          </Link>
         </div>
       </div>
 
