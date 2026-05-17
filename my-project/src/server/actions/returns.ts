@@ -692,7 +692,10 @@ export async function markReturnReceived(
             orderItem: {
               include: {
                 product: {
-                  include: { inventory: { select: { id: true } } },
+                  include: {
+                    // Phase 24: 1 product มีได้หลาย inventoryItem — เลือกอันแรกสำหรับ restock
+                    inventoryItems: { select: { id: true }, take: 1 },
+                  },
                 },
               },
             },
@@ -722,7 +725,7 @@ export async function markReturnReceived(
       // restock เฉพาะ item ที่มี restock=true และมี inventory
       for (const it of existing.items) {
         if (!it.restock) continue;
-        const inv = it.orderItem.product.inventory;
+        const inv = it.orderItem.product.inventoryItems[0];
         if (!inv) continue;
         await tx.inventoryItem.update({
           where: { id: inv.id },

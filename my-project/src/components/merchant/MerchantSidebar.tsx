@@ -15,6 +15,7 @@ import {
   ClipboardList,
   RotateCcw,
   BarChart3,
+  Building2,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { href: "/merchant", label: "Dashboard", icon: LayoutDashboard, group: "main" },
   { href: "/merchant/inventory", label: "Inventory", icon: Boxes, group: "main" },
+  { href: "/merchant/warehouse", label: "Warehouse", icon: Building2, group: "main" },
   { href: "/merchant/products", label: "Products", icon: Package, group: "main" },
   { href: "/merchant/orders", label: "Orders", icon: ShoppingCart, group: "main" },
   { href: "/merchant/invoices", label: "Invoices", icon: FileText, group: "main" },

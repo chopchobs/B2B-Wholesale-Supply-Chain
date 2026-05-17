@@ -480,15 +480,17 @@ export async function receivePurchaseOrder(
       });
 
       // 2) เพิ่มสต็อกผ่าน InventoryItem (สร้างถ้ายังไม่มี) + log InventoryTransaction RESTOCK
+      // หมายเหตุ: productId ไม่ unique แล้ว — ใช้ findFirst (รวมทุก warehouse)
       for (const item of po.items) {
-        const existing = await tx.inventoryItem.findUnique({
+        const existing = await tx.inventoryItem.findFirst({
           where: { productId: item.productId },
+          orderBy: { updatedAt: "desc" },
         });
 
         let inventoryItemId: string;
         if (existing) {
           const updatedInv = await tx.inventoryItem.update({
-            where: { productId: item.productId },
+            where: { id: existing.id },
             data: { quantity: { increment: item.quantity } },
           });
           inventoryItemId = updatedInv.id;

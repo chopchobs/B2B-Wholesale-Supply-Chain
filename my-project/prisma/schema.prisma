@@ -83,8 +83,8 @@ model Product {
   category   Category? @relation(fields: [categoryId], references: [id])
   categoryId String?
 
-  // Phase 9: เชื่อมกับ InventoryItem แบบ 1:1
-  inventory InventoryItem?
+  // Phase 9 + Phase 24: 1 product อาจมีหลาย InventoryItem (กระจายตามคลัง)
+  inventoryItems InventoryItem[]
 
   // Phase 12: line items ใน PurchaseOrder
   purchaseOrderItems PurchaseOrderItem[]
@@ -172,23 +172,30 @@ enum OrderStatus {
 
 model InventoryItem {
   id        String  @id @default(cuid())
-  // ผูก 1:1 กับ Product ผ่าน productId
-  productId String  @unique
+  // ผูกกับ Product (ไม่ unique แล้ว — 1 product มีหลาย item ได้)
+  productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // ปริมาณคงเหลือปัจจุบัน
   quantity          Int    @default(0)
   // เกณฑ์เตือนสต็อกต่ำ
   lowStockThreshold Int    @default(10)
-  // คลัง / ตำแหน่งจัดเก็บ
+  // ตำแหน่งจัดเก็บ (legacy string label — คงไว้เผื่อ display)
   location          String @default("MAIN-WH")
+
+  // Phase 24: ผูกกับ Warehouse แบบ relation จริง
+  warehouseId String?
+  warehouse   Warehouse? @relation(fields: [warehouseId], references: [id])
 
   transactions InventoryTransaction[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // 1 product มี 1 row ต่อ warehouse เท่านั้น
+  @@unique([productId, warehouseId])
   @@index([productId])
+  @@index([warehouseId])
   @@index([location])
 }
 
@@ -582,9 +589,14 @@ model Warehouse {
   address   String? @db.Text
   city      String?
   country   String?
+  // ความจุสูงสุด (หน่วย) — ใช้แสดง utilization bar
+  capacity  Int?
   isDefault Boolean @default(false)
   isActive  Boolean @default(true)
   notes     String? @db.Text
+
+  // Phase 24: InventoryItem ที่จัดเก็บในคลังนี้
+  inventoryItems InventoryItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
