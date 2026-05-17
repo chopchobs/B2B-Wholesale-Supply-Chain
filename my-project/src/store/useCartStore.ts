@@ -14,6 +14,9 @@ export type CartProduct = {
   moq: number;
   stock: number;
   priceTiers: Tier[];
+  description?: string | null;
+  categoryId?: string | null;
+  categoryName?: string | null;
 };
 
 export type CartItem = {

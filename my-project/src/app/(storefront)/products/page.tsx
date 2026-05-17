@@ -1,35 +1,48 @@
-import React from "react";
+import * as React from "react";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-import { ProductGrid } from "@/components/storefront/ProductGrid";
-import { CartProduct } from "@/store/useCartStore";
+import {
+  ProductsBrowser,
+  type StorefrontCategory,
+} from "@/components/storefront/ProductsBrowser";
+import type { CartProduct } from "@/store/useCartStore";
 
 export const dynamic = "force-dynamic";
 
-type ProductWithActiveTiers = Prisma.ProductGetPayload<{
-  include: { priceTiers: true };
+type ProductWithRelations = Prisma.ProductGetPayload<{
+  include: { priceTiers: true; category: true };
 }>;
 
-export default async function StorefrontProductsPage() {
-  // Fetch only active products
-  let dbProducts: ProductWithActiveTiers[] = [];
+export default async function StorefrontProductsPage(): Promise<React.ReactElement> {
+  // ดึงข้อมูลสินค้าและหมวดหมู่จาก DB
+  let dbProducts: ProductWithRelations[] = [];
+  let dbCategories: { id: string; name: string }[] = [];
+
   try {
-    dbProducts = await prisma.product.findMany({
-      where: { isActive: true },
-      include: {
-        priceTiers: {
-          where: { isActive: true },
-          orderBy: { minQuantity: "desc" },
+    [dbProducts, dbCategories] = await Promise.all([
+      prisma.product.findMany({
+        where: { isActive: true },
+        include: {
+          priceTiers: {
+            where: { isActive: true },
+            orderBy: { minQuantity: "desc" },
+          },
+          category: true,
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.category.findMany({
+        where: { isActive: true },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      }),
+    ]);
   } catch (error) {
+    // ถ้า DB ล่ม fallback เป็น empty list
     console.error("Database connection error:", error);
-    // Fallback to empty array if DB fails (e.g. invalid credentials)
   }
 
-  // Safely serialize Prisma Decimal to standard numbers for the Client Component
+  // Serialize Prisma Decimal เป็น number ให้ client component ใช้ได้
   const serializedProducts: CartProduct[] = dbProducts.map((p) => ({
     id: p.id,
     sku: p.sku,
@@ -37,26 +50,46 @@ export default async function StorefrontProductsPage() {
     basePrice: Number(p.basePrice),
     moq: p.moq,
     stock: p.stock,
-    priceTiers: p.priceTiers ? p.priceTiers.map((t) => ({
-      id: t.id,
-      minQuantity: t.minQuantity,
-      unitPrice: Number(t.unitPrice),
-    })) : [],
+    description: p.description ?? null,
+    categoryId: p.categoryId ?? null,
+    categoryName: p.category?.name ?? null,
+    priceTiers: p.priceTiers
+      ? p.priceTiers.map((t) => ({
+          id: t.id,
+          minQuantity: t.minQuantity,
+          unitPrice: Number(t.unitPrice),
+        }))
+      : [],
+  }));
+
+  // เก็บ map ของ createdAt เพื่อ sort "newest" ฝั่ง client โดยไม่ส่ง Date object
+  const createdAtMap: Record<string, number> = {};
+  for (const p of dbProducts) {
+    createdAtMap[p.id] = new Date(p.createdAt).getTime();
+  }
+
+  const categories: StorefrontCategory[] = dbCategories.map((c) => ({
+    id: c.id,
+    name: c.name,
   }));
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">B2B Wholesale Catalog</h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl">
-            Browse our premium selection of supplies. Bulk volume discounts are applied automatically to your quote.
-          </p>
-        </div>
+    <div className="container mx-auto max-w-7xl px-4 py-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-[#2D2825] md:text-4xl">
+          B2B Wholesale Catalog
+        </h1>
+        <p className="mt-2 max-w-2xl text-[#736B66]">
+          Browse our premium selection of supplies. Bulk volume discounts are applied
+          automatically to your quote.
+        </p>
       </div>
 
-      {/* Render Client Component Grid */}
-      <ProductGrid products={serializedProducts} />
+      <ProductsBrowser
+        products={serializedProducts}
+        categories={categories}
+        createdAtMap={createdAtMap}
+      />
     </div>
   );
 }

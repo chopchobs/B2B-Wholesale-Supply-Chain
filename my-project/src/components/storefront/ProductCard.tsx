@@ -1,157 +1,141 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { ShoppingCart } from "lucide-react";
+import * as React from "react";
+import Link from "next/link";
+import { Package, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { QuantityInput } from "@/components/storefront/QuantityInput";
 import {
   useCartStore,
   calculateUnitPrice,
-  CartProduct,
+  type CartProduct,
 } from "@/store/useCartStore";
 
 interface ProductCardProps {
   product: CartProduct;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const [quantity, setQuantity] = useState<number>(product.moq);
+export function ProductCard({ product }: ProductCardProps): React.ReactElement {
+  const [quantity, setQuantity] = React.useState<number>(product.moq);
   const addItem = useCartStore((state) => state.addItem);
 
-  // Real-time calculation of the unit price based on the current inputted quantity
-  const currentUnitPrice = useMemo(() => {
+  // คำนวณราคา/หน่วยตามปริมาณปัจจุบัน (real-time tier matching)
+  const currentUnitPrice = React.useMemo(() => {
     return calculateUnitPrice(product.basePrice, quantity, product.priceTiers);
   }, [product.basePrice, quantity, product.priceTiers]);
 
   const totalPrice = currentUnitPrice * quantity;
+  const isOutOfStock = product.stock <= 0;
+  const hasDiscount = currentUnitPrice < product.basePrice;
 
-  const handleAdd = () => {
-    if (quantity >= product.moq) {
+  function handleAdd(): void {
+    if (quantity >= product.moq && !isOutOfStock) {
       addItem(product, quantity);
-      // Optional: show a toast notification here
     }
-  };
-
-  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value);
-    if (!isNaN(val)) {
-      setQuantity(val);
-    } else {
-      setQuantity(product.moq); // fallback
-    }
-  };
+  }
 
   return (
-    <Card className="flex flex-col h-full border-border/50 shadow-sm hover:shadow-md transition-shadow duration-200">
-      <CardHeader className="pb-4">
-        <div className="flex justify-between items-start mb-2">
-          <Badge
-            variant="outline"
-            className="text-xs font-mono text-muted-foreground"
-          >
-            {product.sku}
-          </Badge>
-          <Badge
-            variant="secondary"
-            className="bg-primary/10 text-primary hover:bg-primary/20"
-          >
-            MOQ: {product.moq}
-          </Badge>
-        </div>
-        <CardTitle className="text-xl line-clamp-2">{product.name}</CardTitle>
-        <div className="mt-2 text-2xl font-bold text-foreground">
-          ฿
-          {product.basePrice.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-          })}
-          <span className="text-sm font-normal text-muted-foreground ml-1">
-            / unit
+    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#E8E0D5] bg-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+      {/* Image placeholder */}
+      <Link
+        href={`/products/${product.id}`}
+        className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-[#F5F0E8] to-[#D4A574]/30"
+        aria-label={`View ${product.name}`}
+      >
+        <Package className="h-14 w-14 text-[#CC785C]/40 transition-transform duration-200 group-hover:scale-110" />
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-mono uppercase tracking-wide text-[#736B66]">
+          {product.sku}
+        </span>
+        {isOutOfStock ? (
+          <span className="absolute right-3 top-3 rounded-full bg-[#2D2825] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+            Out of stock
           </span>
-        </div>
-      </CardHeader>
+        ) : (
+          <span className="absolute right-3 top-3 rounded-full bg-[#CC785C] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+            MOQ {product.moq}
+          </span>
+        )}
+      </Link>
 
-      <CardContent className="grow space-y-4">
-        {/* Tiered Pricing Summary Display */}
-        {product.priceTiers && product.priceTiers.length > 0 && (
-          <div className="bg-muted/30 rounded-lg p-3 space-y-2 border border-border/50">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <Link href={`/products/${product.id}`}>
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[#2D2825] transition-colors hover:text-[#CC785C]">
+            {product.name}
+          </h3>
+        </Link>
+
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-[#2D2825]">
+            ฿{currentUnitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          </span>
+          {hasDiscount ? (
+            <span className="text-sm text-[#736B66] line-through">
+              ฿{product.basePrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </span>
+          ) : null}
+          <span className="text-xs text-[#736B66]">/ unit</span>
+        </div>
+
+        {/* Tier preview */}
+        {product.priceTiers && product.priceTiers.length > 0 ? (
+          <div className="rounded-lg border border-[#E8E0D5] bg-[#F5F0E8]/50 p-3">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-[#736B66]">
               Volume Discounts
             </p>
-            <ul className="space-y-1">
-              {product.priceTiers
+            <ul className="space-y-0.5 text-xs">
+              {[...product.priceTiers]
                 .sort((a, b) => a.minQuantity - b.minQuantity)
+                .slice(0, 3)
                 .map((tier) => (
-                  <li key={tier.id} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      Buy {tier.minQuantity}+
-                    </span>
-                    <span className="font-medium text-primary">
-                      ฿
-                      {tier.unitPrice.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                      })}
+                  <li
+                    key={tier.id}
+                    className="flex justify-between text-[#736B66]"
+                  >
+                    <span>{tier.minQuantity}+ units</span>
+                    <span className="font-medium text-[#CC785C]">
+                      ฿{tier.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                   </li>
                 ))}
             </ul>
           </div>
-        )}
-      </CardContent>
+        ) : null}
 
-      <CardFooter className="flex flex-col space-y-4 pt-4 border-t border-border/50 bg-muted/5 rounded-b-xl">
-        <div className="w-full flex items-center justify-between gap-4">
-          <div className="flex flex-col flex-1">
-            <label className="text-xs font-medium text-muted-foreground mb-1">
+        {/* Quantity + total */}
+        <div className="mt-auto flex items-end justify-between gap-3 pt-2">
+          <div>
+            <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#736B66]">
               Quantity
-            </label>
-            <Input
-              type="number"
-              min={product.moq}
+            </p>
+            <QuantityInput
               value={quantity}
-              onChange={handleQuantityChange}
-              className="font-mono text-center"
+              onChange={setQuantity}
+              min={product.moq}
+              max={product.stock > 0 ? product.stock : undefined}
+              disabled={isOutOfStock}
             />
           </div>
-          <div className="flex flex-col flex-1 text-right">
-            <label className="text-xs font-medium text-muted-foreground mb-1">
-              Est. Unit Price
-            </label>
-            <span
-              className={`text-lg font-bold ${currentUnitPrice < product.basePrice ? "text-green-600 dark:text-green-400" : "text-foreground"}`}
-            >
-              ฿
-              {currentUnitPrice.toLocaleString(undefined, {
-                minimumFractionDigits: 2,
-              })}
-            </span>
+          <div className="text-right">
+            <p className="text-[10px] uppercase tracking-wider text-[#736B66]">
+              Subtotal
+            </p>
+            <p className="text-lg font-bold text-[#2D2825]">
+              ฿{totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </p>
           </div>
-        </div>
-
-        <div className="w-full flex justify-between items-center text-sm mb-2">
-          <span className="text-muted-foreground">Total:</span>
-          <span className="font-bold text-lg">
-            ฿
-            {totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-          </span>
         </div>
 
         <Button
+          type="button"
           onClick={handleAdd}
-          disabled={quantity < product.moq}
-          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={isOutOfStock || quantity < product.moq}
+          className="w-full bg-[#CC785C] text-white hover:bg-[#B86548] disabled:bg-[#E8E0D5] disabled:text-[#736B66]"
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
-          Add to Quote
+          {isOutOfStock ? "Out of stock" : "Add to Cart"}
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
