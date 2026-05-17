@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getInvoiceById } from "@/server/actions/invoices";
 import { InvoiceDetailClient } from "@/components/merchant/InvoiceDetailClient";
+import { DownloadPDFButton } from "@/components/pdf/DownloadPDFButton";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,7 @@ export default async function InvoiceDetailPage(
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6 bg-[#F5F0E8] min-h-screen">
-      <div className="flex items-center gap-2 print:hidden">
+      <div className="flex items-center justify-between gap-2 print:hidden">
         <Link href="/merchant/invoices">
           <Button
             variant="ghost"
@@ -51,6 +52,10 @@ export default async function InvoiceDetailPage(
             Invoices
           </Button>
         </Link>
+        <DownloadPDFButton
+          href={`/api/invoices/${invoice.id}/pdf`}
+          filename={`invoice-${invoice.invoiceNumber}.pdf`}
+        />
       </div>
 
       <InvoiceDetailClient invoice={invoice} />

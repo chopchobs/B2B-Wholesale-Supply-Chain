@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getPurchaseOrderById } from "@/server/actions/purchaseOrders";
 import { PurchaseOrderDetailClient } from "@/components/merchant/PurchaseOrderDetailClient";
+import { DownloadPDFButton } from "@/components/pdf/DownloadPDFButton";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +36,7 @@ export default async function PurchaseOrderDetailPage(
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6 bg-[#F5F0E8] min-h-screen">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between gap-2">
         <Link href="/merchant/purchase-orders">
           <Button
             variant="ghost"
@@ -46,6 +47,10 @@ export default async function PurchaseOrderDetailPage(
             Purchase Orders
           </Button>
         </Link>
+        <DownloadPDFButton
+          href={`/api/purchase-orders/${res.data.id}/pdf`}
+          filename={`po-${res.data.poNumber}.pdf`}
+        />
       </div>
 
       <PurchaseOrderDetailClient purchaseOrder={res.data} />
